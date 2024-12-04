@@ -46,15 +46,11 @@ int main() {
 
     cout << "Amount of X's found: " << x_counter << endl;
 
-    int directions_matrix[8][2] = {
+    int directions_matrix[4][2] = {
         { 1,  0}, //left to right
         { 1,  1}, //top_left to bottom_right
         { 0,  1}, //top to bottom
-        { 1, -1}, //bottom_left to top_right
-        {-1,  0}, //right to left
-        {-1, -1}, //bottom_right to top_left
-        { 0, -1}, //bottom to top
-        {-1,  1}  //top_right to bottom_left
+        { 1, -1}  //bottom_left to top_right
     };
 
     for (int x_i = 0; x_i < x_counter; x_i++) // for each x
@@ -64,28 +60,29 @@ int main() {
         vector<char> letters;
         int x_col = x_pos_cols[x_i];
         int x_row = x_pos_rows[x_i];
-        for (int direction_i = 0; direction_i < 8; direction_i++) // for each direction
-        {   
-                for (int letter_i = 1; letter_i <= 3; letter_i++) // check each letter
-                {
-                    letter_pos_row = x_row + (directions_matrix[direction_i][1] * letter_i) ;
-                    letter_pos_col = x_col + (directions_matrix[direction_i][0] * letter_i);
+        vector<int> signs = {1, -1};
 
-                    if (letter_pos_col >= 0 & letter_pos_col < xmas_matrix.size() & 
-                        letter_pos_row >= 0 & letter_pos_row < xmas_matrix.size())// if in bounds; check the letters
+        for(auto sign:signs)
+        {
+            for (int direction_i = 0; direction_i < 4; direction_i++) // for each direction
+            {   
+                    for (int letter_i = 1; letter_i <= 3; letter_i++) // check each letter
                     {
-                        letters.push_back(xmas_matrix[letter_pos_row][letter_pos_col]);
-                    }
+                        letter_pos_row = x_row + (directions_matrix[direction_i][1] * letter_i * sign);
+                        letter_pos_col = x_col + (directions_matrix[direction_i][0] * letter_i * sign);
 
-                    string s(letters.begin(), letters.end());
-                    if(s == "MAS"){
-                        if(x_row < 200){
-                        cout << "Match found: " << x_row << ", " << x_col <<
-                        " direction:" << direction_i << endl;
-                        xmas_counter++;}   
+                        if (letter_pos_col >= 0 & letter_pos_col < xmas_matrix.size() & 
+                            letter_pos_row >= 0 & letter_pos_row < xmas_matrix.size())// if in bounds; check the letters
+                        {
+                            letters.push_back(xmas_matrix[letter_pos_row][letter_pos_col]);
+                        }
+
+                        string s(letters.begin(), letters.end());
+                        if(s == "MAS")xmas_counter++;
+                        
                     }
-                }
-            letters.clear();
+                letters.clear();
+            }
         }
         
     }
