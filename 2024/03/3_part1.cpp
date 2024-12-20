@@ -8,7 +8,7 @@
 using namespace std;
 
 int main() {
-    ifstream inFile("C:/Users/Guido/projects/C/aoc2024_03/input.txt");
+    ifstream inFile("input.txt");
     std::string entry;
     int sum_of_mul_returns = 0;
     int n_mul = 0;

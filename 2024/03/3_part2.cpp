@@ -8,13 +8,10 @@
 using namespace std;
 
 int main() {
-    ifstream inFile("C:/Users/Guido/projects/C/aoc2024_03/input.txt");
+    ifstream inFile("input.txt");
     std::string entry;
     int sum_of_mul_returns = 0;
     int n_mul = 0;
-
-    //lookbehind not supported; sad
-    //regex pattern(R"((?<!don't\(\).*?^(do\(\)))mul\(([0-9]{1,3}),([0-9]{1,3})\))");
 
     //instead remove everything between 'don't()' and 'do()'
     regex dont_do_pattern(R"(don't\(\).*?do\(\))");
