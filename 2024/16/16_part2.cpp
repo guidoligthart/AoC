@@ -20,7 +20,6 @@ class maze_map{
         vector<vector<int>> costs;
         vector<vector<char>> direction;
         vector<vector<bool>> chair;
-        map<int, map<int, vector<vector<int>>>> origin;
 };
 
 void draw_map(vector<vector<char>> map){
@@ -181,11 +180,9 @@ int main(){
         }
     }
 
-    int a(dijkstra(start_x, start_y, end_x, end_y, '>', map));
-    cout << "Total cost: " << a << endl;;
+    int total_cost(dijkstra(start_x, start_y, end_x, end_y, '>', map));
 
     int chair_counter = 0;
-    int multiple_origin_counter = 0;
     place_chairs(end_x, end_y, map);
     for(int i = 0; i < map.character.size(); i++){
         for(int j = 0; j < map.character[0].size(); j++){
@@ -193,10 +190,11 @@ int main(){
                 chair_counter++;
                 cout << ".";
             } else if(map.wall[i][j]){
-                cout << "#";
+                cout << "█";
             } else cout << " ";
         }
         cout << endl;
     }
+    cout << "Total cost: " << total_cost << endl;;
     cout << "The amount of good chair spots is: " << chair_counter << endl;
 }
