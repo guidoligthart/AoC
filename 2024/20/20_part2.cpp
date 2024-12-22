@@ -18,37 +18,46 @@ class maze_map{
         vector<vector<bool>> visited;
         vector<vector<bool>> wall;
         vector<vector<int>> costs;
+        vector<int> start;
+        vector<int> end;
 };
 
-maze_map construct_map(int rows, int cols){
-    //construct a maze with padding
+maze_map construct_map(string input){
     maze_map m_map;
-    for(int i = 0; i < (rows + 2); i++){
-        vector<bool> wall_row;
-        vector<bool> visited_row;
-        vector<int> costs_row;
-        for(int j = 0; j < (cols + 2); j++){
-            wall_row.push_back(j == 0 || j == (cols+1) || i == 0 || i == (rows+1));
-            visited_row.push_back(false);
-            costs_row.push_back(Inf);
+    ifstream inFile(input);
+    string entry;
+
+    vector<int> start;
+    vector<int> end;
+    int i = 0;
+    int j = 0;
+    while (getline(inFile, entry))
+    {
+        j = 0;
+            vector<bool> wall_col;
+            vector<bool> visited_col;
+
+            vector<int> costs_col;
+        for (auto character:entry){
+            wall_col.push_back(character == '#');
+            visited_col.push_back(false);
+            costs_col.push_back(Inf);
+
+            if(character == 'S') m_map.start = {i, j};
+            if(character == 'E') m_map.end = {i, j};
+            j++;
         }
-        m_map.wall.push_back(wall_row);
-        m_map.visited.push_back(visited_row);
-        m_map.costs.push_back(costs_row);
+        m_map.wall.push_back(wall_col);
+        m_map.visited.push_back(visited_col);
+        m_map.costs.push_back(costs_col);
+        i++;
     }
     return m_map;
-}
-
-void create_wall(vector<vector<int>> &wall_input, maze_map &map){
-    map.wall[wall_input[0][1]][wall_input[0][0]] = true;
-    wall_input.erase(wall_input.begin());
 }
 
 void draw_map(maze_map map){
     int map_x = map.wall[0].size();
     int map_y = map.wall.size();
-    char to_draw;
-
     for (int i = 0; i < map_y; i++)
     {
         for(int j = 0; j < map_x; j++){
@@ -68,6 +77,23 @@ vector<vector<int>> get_neighbours(int x, int y, maze_map &map, bool visited_mat
 
         if(!map.wall[dest_y][dest_x] && (!visited_matters || !map.visited[dest_y][dest_x])){
             neighbours.push_back({dest_y, dest_x});
+        }
+    }
+    return(neighbours);
+}
+
+vector<vector<int>>get_distant_neighbours(int row, int col, maze_map &map, int jump = 20){
+    vector<vector<int>> neighbours;
+    for(int i = -jump; i <= jump; i++){
+        int steps_left = jump - abs(i);
+        for(int j = -steps_left; j <= steps_left; j++){
+            //if in bounds
+            if((row+i) > 0 && (row+i) < map.wall.size() && (col+j) > 0 && (col+j) < map.wall[0].size()){
+                //and not a wall
+                if(!map.wall[row+i][col+j]){
+                    neighbours.push_back({row+i, col+j});
+                }
+            }
         }
     }
     return(neighbours);
@@ -124,60 +150,33 @@ void reset_costs_and_visited(maze_map &m_map){
 }
 
 int main(){
-    //parse the input
-    ifstream inFile("input.txt");
-    string entry;
-    vector<vector<int>> wall_input;
-    while (getline(inFile, entry))
-    {
-        istringstream row(entry);
-        string col;
-        vector<int> wall;
-        while (getline(row, col, ','))
-        {
-            wall.push_back(stoi(col) + 1);
-        }
-        wall_input.push_back(wall);
-        
-    }
-    int map_rows = 71;
-    int map_cols = 71;
+    maze_map m_map = construct_map("input.txt");
 
-    maze_map m_map = construct_map(map_rows, map_cols);
-    int input_size = wall_input.size();
-    vector<vector<int>> wall_input_copy = wall_input;
-
-    map<int, maze_map> all_maps;
-
-    for (int i = 0; i < input_size; i++){
-        create_wall(wall_input, m_map);
-        all_maps[i] = m_map;
-    }
-    cout << "finished building all maps, start finding paths" <<endl; 
-
-    //binary search for last possible solution;
-    bool puzzle_solved = false;
-    int left_i = 1024;
-    int right_i = input_size - 2;
-    int solveable1, solveable2;
-    int i = (left_i + right_i)/2;
-    while(!puzzle_solved){
-        i = (left_i + right_i)/2;
-        solveable1 = dijkstra(1, 1, 71, 71, all_maps[i]) != Inf;
-        solveable2 = dijkstra(1, 1, 71, 71, all_maps[i+1]) != Inf;
-        if(solveable1 & !solveable2){
-            puzzle_solved = true;
-        }
-        if(solveable1 & solveable2){
-            left_i = i;
-        }
-        if(!solveable1 & !solveable2){
-            right_i = i;
-        }
-    }
+    draw_map(m_map);
     
-    cout << "After 1024 bytes, the amount of steps to exit is: " << dijkstra(1, 1, 71, 71, all_maps[1023]) << endl;
-    cout << "The first byte to drop that makes the maze impossible is: " <<
-    wall_input_copy[i+1][0]-1 << "," << wall_input_copy[i+1][1]-1;
+    // dijkstra is inefficient here, but I already wrote it for a previous puzzle and it works
+    int base_time = dijkstra(m_map.start[1], m_map.start[0], m_map.end[1], m_map.end[0], m_map);
+    
+    //time to cheat
+    int good_cheats = 0;
+    vector<vector<int>> cheatable_walls;
+    for(int i = 1; i < m_map.wall.size() - 1; i++){
+        for(int j = 1; j < m_map.wall.size() - 1; j ++){
+            //check if cheatable
+            if(!m_map.wall[i][j]){
+                vector<vector<int>> neighbours = get_distant_neighbours(i, j, m_map, 20);
 
+                for(auto neighbour:neighbours){
+                    int time_diff = m_map.costs[neighbour[0]][neighbour[1]] - m_map.costs[i][j]; 
+                    int time_save = time_diff - (abs(i - neighbour[0]) + abs(j - neighbour[1]));
+                    if(time_save >= 100){
+                        good_cheats++;
+                    }
+                }
+            }
+        }
+    }
+
+
+    cout << "The amount of cheats saving more than 100 picoseconds is: " << good_cheats << endl;
 }
